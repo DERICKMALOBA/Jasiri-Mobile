@@ -24,6 +24,17 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        create("release") {
+            // Self-signed local keystore for internal/ad-hoc distribution, not Play Store.
+            // Keystore file lives outside git (see .gitignore) since it signs release builds.
+            storeFile = file("keystore/release.jks")
+            storePassword = "jasiriDevRelease2026"
+            keyAlias = "jasiri_release"
+            keyPassword = "jasiriDevRelease2026"
+        }
+    }
+
     buildTypes {
         debug {
             // Android emulator loopback to the host machine, where springboot-backend
@@ -33,8 +44,8 @@ android {
         release {
             isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            // TODO: replace with the real production API host before any release build.
-            buildConfigField("String", "BASE_URL", "\"https://api.jasiri.example/\"")
+            buildConfigField("String", "BASE_URL", "\"https://api.jasirilending.software/\"")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 

@@ -11,4 +11,5 @@
 *.aab
 /app/build
 /app/release
+/app/keystore/
 /gradle/wrapper/gradle-wrapper.jar
