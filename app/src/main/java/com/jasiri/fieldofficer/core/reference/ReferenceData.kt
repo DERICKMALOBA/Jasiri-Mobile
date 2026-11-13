@@ -1,11 +1,11 @@
-package com.jasiri.fieldofficer.core.leads
+package com.jasiri.fieldofficer.core.reference
 
 /**
- * Mirrors the web app's LeadFormModal.jsx static taxonomy (D:\projects\jasiri\client\src\pages\leads\LeadFormModal.jsx)
- * so the mobile Add Lead form matches it field-for-field. Lead Source, Lending Model and
- * Customer Classification are tenant-configurable there (fetched from /api/lead-settings/...)
- * with no static fallback list, so they aren't reproduced here — mobile defaults Lead Source
- * to "Field Agent" the same way the web form does when nothing is picked.
+ * Static taxonomy mirrored from the web app (D:\projects\jasiri\client\src), shared by the
+ * Lead and Customer forms so both match it — LeadFormModal.jsx and registry/components/Form.jsx
+ * each define their own copy of this same industry/business-type taxonomy, and Form.jsx's
+ * KENYA_COUNTIES spelling (no hyphens) is the one also used by the real customer-creation
+ * endpoint's county/business_county columns, so that spelling is authoritative here.
  */
 const val OTHER_OPTION = "Other…"
 
@@ -58,10 +58,16 @@ val INDUSTRY_BUSINESS_TYPES: Map<String, List<String>> = linkedMapOf(
 )
 
 val KENYA_COUNTIES: List<String> = listOf(
-    "Mombasa", "Kwale", "Kilifi", "Tana River", "Lamu", "Taita-Taveta", "Garissa", "Wajir",
-    "Mandera", "Marsabit", "Isiolo", "Meru", "Tharaka-Nithi", "Embu", "Kitui", "Machakos",
+    "Mombasa", "Kwale", "Kilifi", "Tana River", "Lamu", "Taita Taveta", "Garissa", "Wajir",
+    "Mandera", "Marsabit", "Isiolo", "Meru", "Tharaka Nithi", "Embu", "Kitui", "Machakos",
     "Makueni", "Nyandarua", "Nyeri", "Kirinyaga", "Murang'a", "Kiambu", "Turkana", "West Pokot",
-    "Samburu", "Trans Nzoia", "Uasin Gishu", "Elgeyo-Marakwet", "Nandi", "Baringo", "Laikipia",
+    "Samburu", "Trans Nzoia", "Uasin Gishu", "Elgeyo Marakwet", "Nandi", "Baringo", "Laikipia",
     "Nakuru", "Narok", "Kajiado", "Kericho", "Bomet", "Kakamega", "Vihiga", "Bungoma", "Busia",
     "Siaya", "Kisumu", "Homa Bay", "Migori", "Kisii", "Nyamira", "Nairobi"
 )
+
+val PREFIX_OPTIONS = listOf("Mr", "Mrs", "Ms", "Dr")
+val GENDER_OPTIONS = listOf("Male", "Female")
+val MARITAL_STATUS_OPTIONS = listOf("Single", "Married", "Separated/Divorced", "Other")
+val RESIDENCE_STATUS_OPTIONS = listOf("Own", "Rent", "Family", "Other")
+val YES_NO_OPTIONS = listOf("Yes", "No")

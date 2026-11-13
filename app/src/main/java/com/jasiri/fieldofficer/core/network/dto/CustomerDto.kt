@@ -112,26 +112,49 @@ data class CreateCustomerFields(
     @SerialName("Surname") val surname: String,
     @SerialName("Middlename") val middlename: String? = null,
     val mobile: String,
+    @SerialName("alternative_mobile") val alternativeMobile: String? = null,
     @SerialName("id_number") val idNumber: String,
+    @SerialName("date_of_birth") val dateOfBirth: String? = null,
     val gender: String? = null,
     @SerialName("marital_status") val maritalStatus: String? = null,
+    @SerialName("residence_status") val residenceStatus: String? = null,
+    val occupation: String? = null,
+    @SerialName("postal_address") val postalAddress: String? = null,
+    val code: Int? = null,
     val town: String? = null,
     val county: String? = null,
     @SerialName("business_name") val businessName: String? = null,
     @SerialName("business_type") val businessType: String? = null,
     val industry: String? = null,
+    @SerialName("business_county") val businessCounty: String? = null,
     @SerialName("business_location") val businessLocation: String? = null,
+    val road: String? = null,
+    val landmark: String? = null,
+    @SerialName("has_local_authority_license") val hasLocalAuthorityLicense: Boolean? = null,
+    @SerialName("business_lat") val businessLat: Double? = null,
+    @SerialName("business_lng") val businessLng: Double? = null,
     @SerialName("daily_Sales") val dailySales: Double? = null,
+    @SerialName("year_established") val yearEstablished: String? = null,
     @SerialName("passport_url") val passportUrl: String? = null,
     @SerialName("id_front_url") val idFrontUrl: String? = null,
     @SerialName("id_back_url") val idBackUrl: String? = null,
     @SerialName("form_status") val formStatus: String = "submitted"
 )
 
+/** Mirrors the backend's top-level `spouse` map — a sibling of `customer`, not nested in it. */
+@Serializable
+data class SpouseFields(
+    val name: String,
+    @SerialName("id_number") val idNumber: String,
+    val mobile: String,
+    @SerialName("economic_activity") val economicActivity: String? = null
+)
+
 @Serializable
 data class CreateCustomerRequest(
     val customer: CreateCustomerFields,
-    val customerId: Long? = null
+    val customerId: Long? = null,
+    val spouse: SpouseFields? = null
 )
 
 @Serializable

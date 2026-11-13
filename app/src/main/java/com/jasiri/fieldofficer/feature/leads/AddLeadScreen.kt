@@ -10,11 +10,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -25,16 +22,14 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.jasiri.fieldofficer.core.leads.INDUSTRY_BUSINESS_TYPES
-import com.jasiri.fieldofficer.core.leads.KENYA_COUNTIES
-import com.jasiri.fieldofficer.core.leads.OTHER_OPTION
+import com.jasiri.fieldofficer.core.reference.INDUSTRY_BUSINESS_TYPES
+import com.jasiri.fieldofficer.core.reference.KENYA_COUNTIES
+import com.jasiri.fieldofficer.core.reference.OTHER_OPTION
+import com.jasiri.fieldofficer.feature.common.FormDropdownField
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -97,7 +92,7 @@ fun AddLeadScreen(
             )
 
             Spacer(Modifier.height(12.dp))
-            DropdownField(
+            FormDropdownField(
                 label = "Industry Segment",
                 selected = state.industry,
                 options = INDUSTRY_BUSINESS_TYPES.keys.toList() + OTHER_OPTION,
@@ -117,7 +112,7 @@ fun AddLeadScreen(
             if (state.industry.isNotBlank()) {
                 Spacer(Modifier.height(12.dp))
                 val businessTypeOptions = (INDUSTRY_BUSINESS_TYPES[state.industry] ?: emptyList()) + OTHER_OPTION
-                DropdownField(
+                FormDropdownField(
                     label = "Business Type",
                     selected = state.businessType,
                     options = businessTypeOptions,
@@ -136,7 +131,7 @@ fun AddLeadScreen(
             }
 
             Spacer(Modifier.height(12.dp))
-            DropdownField(
+            FormDropdownField(
                 label = "Operational Location (County)",
                 selected = state.county,
                 options = KENYA_COUNTIES,
@@ -161,38 +156,6 @@ fun AddLeadScreen(
             Spacer(Modifier.height(20.dp))
             Button(onClick = viewModel::save, modifier = Modifier.fillMaxWidth().height(48.dp)) {
                 Text("Save Lead")
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun DropdownField(
-    label: String,
-    selected: String,
-    options: List<String>,
-    onSelected: (String) -> Unit
-) {
-    var expanded by remember { mutableStateOf(false) }
-    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
-        OutlinedTextField(
-            value = selected,
-            onValueChange = {},
-            readOnly = true,
-            label = { Text(label) },
-            trailingIcon = { Icon(Icons.Filled.ArrowDropDown, contentDescription = null) },
-            modifier = Modifier.fillMaxWidth().menuAnchor()
-        )
-        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            options.forEach { option ->
-                DropdownMenuItem(
-                    text = { Text(option) },
-                    onClick = {
-                        onSelected(option)
-                        expanded = false
-                    }
-                )
             }
         }
     }

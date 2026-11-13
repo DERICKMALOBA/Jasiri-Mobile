@@ -7,6 +7,7 @@ import com.jasiri.fieldofficer.core.network.dto.CreateCustomerRequest
 import com.jasiri.fieldofficer.core.network.dto.CustomerBundleDto
 import com.jasiri.fieldofficer.core.network.dto.CustomerDto
 import com.jasiri.fieldofficer.core.network.dto.LoanSummaryDto
+import com.jasiri.fieldofficer.core.network.dto.SpouseFields
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
@@ -89,8 +90,8 @@ class CustomerRepository @Inject constructor(
         result.url
     }
 
-    suspend fun createCustomer(fields: CreateCustomerFields): Result<CustomerDto?> = runCatching {
-        api.createCustomerFull(CreateCustomerRequest(customer = fields)).data?.customer
+    suspend fun createCustomer(fields: CreateCustomerFields, spouse: SpouseFields? = null): Result<CustomerDto?> = runCatching {
+        api.createCustomerFull(CreateCustomerRequest(customer = fields, spouse = spouse)).data?.customer
     }
 
     private fun sha256(file: File): String {
