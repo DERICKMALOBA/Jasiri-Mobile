@@ -25,12 +25,15 @@ jobs:
       - name: Remove dev-machine-only JDK override
         run: sed -i '/org.gradle.java.home/d' gradle.properties
 
-      - uses: android-actions/setup-android@v3
-
+      # ubuntu-latest ships an Android SDK + cmdline-tools already — use that instead of a
+      # third-party setup action (android-actions/setup-android@v3 failed outright in CI,
+      # likely due to its own cmdline-tools download breaking; the runner's preinstalled
+      # sdkmanager avoids that dependency).
       - name: Install the Android SDK platform this project compiles against
         run: |
-          yes | sdkmanager --licenses >/dev/null || true
-          sdkmanager "platforms;android-37" "platform-tools"
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37" "platform-tools"
 
       - name: Build debug APK
         run: ./gradlew assembleDebug --no-daemon --stacktrace
