@@ -13,6 +13,9 @@ sealed class Destination(val route: String) {
         fun createRoute(stopId: Long) = "routes/$stopId/visit"
     }
     data object SelectVisitCustomers : Destination("routes/select")
+    data object CollectPayment : Destination("collections/pay?phone={phone}&amount={amount}") {
+        fun createRoute(phone: String = "", amount: String = "") = "collections/pay?phone=$phone&amount=$amount"
+    }
     data object CustomerDetail : Destination("customers/{customerId}") {
         fun createRoute(customerId: Long) = "customers/$customerId"
     }

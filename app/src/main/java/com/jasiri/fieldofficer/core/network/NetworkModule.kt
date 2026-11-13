@@ -61,4 +61,8 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideStkPushApi(retrofit: Retrofit): StkPushApi = retrofit.create(StkPushApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideCollectionsApi(retrofit: Retrofit): CollectionsApi = retrofit.create(CollectionsApi::class.java)
 }

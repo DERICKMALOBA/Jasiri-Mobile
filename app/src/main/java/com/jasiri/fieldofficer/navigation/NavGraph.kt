@@ -26,6 +26,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.jasiri.fieldofficer.feature.auth.LoginScreen
 import com.jasiri.fieldofficer.feature.collections.CollectPaymentScreen
+import com.jasiri.fieldofficer.feature.collections.CollectionsScreen
 import com.jasiri.fieldofficer.feature.common.ComingSoonScreen
 import com.jasiri.fieldofficer.feature.customer.add.AddCustomerScreen
 import com.jasiri.fieldofficer.feature.customer.detail.CustomerDetailScreen
@@ -140,7 +141,23 @@ fun FieldOfficerNavGraph(navController: NavHostController = rememberNavControlle
                     onCancel = { navController.popBackStack() }
                 )
             }
-            composable(Destination.Collections.route) { CollectPaymentScreen() }
+            composable(Destination.Collections.route) {
+                CollectionsScreen(
+                    onCollect = { phone, amount ->
+                        navController.navigate(Destination.CollectPayment.createRoute(phone, amount))
+                    },
+                    onManualPayment = { navController.navigate(Destination.CollectPayment.createRoute()) }
+                )
+            }
+            composable(
+                Destination.CollectPayment.route,
+                arguments = listOf(
+                    navArgument("phone") { type = NavType.StringType; defaultValue = "" },
+                    navArgument("amount") { type = NavType.StringType; defaultValue = "" }
+                )
+            ) {
+                CollectPaymentScreen(onBack = { navController.popBackStack() })
+            }
             composable(Destination.Targets.route) { ComingSoonScreen("Targets") }
         }
     }

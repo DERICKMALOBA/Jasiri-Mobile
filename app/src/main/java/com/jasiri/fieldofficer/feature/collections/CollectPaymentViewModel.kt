@@ -1,5 +1,6 @@
 package com.jasiri.fieldofficer.feature.collections
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jasiri.fieldofficer.core.collections.CollectionsRepository
@@ -30,10 +31,16 @@ data class CollectPaymentUiState(
 
 @HiltViewModel
 class CollectPaymentViewModel @Inject constructor(
-    private val repository: CollectionsRepository
+    private val repository: CollectionsRepository,
+    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(CollectPaymentUiState())
+    private val _uiState = MutableStateFlow(
+        CollectPaymentUiState(
+            phone = savedStateHandle.get<String>("phone").orEmpty(),
+            amount = savedStateHandle.get<String>("amount").orEmpty()
+        )
+    )
     val uiState = _uiState.asStateFlow()
 
     private var pollJob: Job? = null
