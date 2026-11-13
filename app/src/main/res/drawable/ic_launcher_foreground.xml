@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Placeholder mark (a stylized "J") — swap for real branding before release. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#C2703D"
+        android:pathData="M63,30 L75,30 L75,68 C75,80 67,88 55,88 C45,88 37,82 34,72 L45,67 C47,73 50,76 55,76 C60,76 63,72 63,66 Z" />
+</vector>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- "Copper Harvest" palette — also defined in Kotlin at core/designsystem/Color.kt;
+         kept here only for resources that must be plain XML (launcher icon background). -->
+    <color name="ic_launcher_background">#0F2A4A</color>
+</resources>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Allows cleartext HTTP only to the Android emulator's loopback-to-host address,
+  for local development against a springboot-backend running on the dev machine.
+  Remove the domain-config entirely (or restrict it further) before any release build.
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">10.0.2.2</domain>
+    </domain-config>
+</network-security-config>

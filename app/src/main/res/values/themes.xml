@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Bridging theme only — all real theming (colors, typography) is done in
+         Compose via core/designsystem/Theme.kt. -->
+    <style name="Theme.FieldOfficer" parent="android:Theme.Material.Light.NoActionBar" />
+</resources>
