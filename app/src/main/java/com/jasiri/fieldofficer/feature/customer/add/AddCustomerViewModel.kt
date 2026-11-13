@@ -54,12 +54,15 @@ data class AddCustomerUiState(
     val dailySales: String = "",
     val idFrontFile: File? = null,
     val idBackFile: File? = null,
+    val residenceFile: File? = null,
+    val businessImageFiles: List<File> = emptyList(),
+    val isCapturingBusinessPhoto: Boolean = false,
     val selfieFile: File? = null,
     val isSubmitting: Boolean = false,
     val error: String? = null,
     val isComplete: Boolean = false
 ) {
-    val totalSteps = 5
+    val totalSteps = 6
 }
 
 @HiltViewModel
@@ -114,7 +117,21 @@ class AddCustomerViewModel @Inject constructor(
 
     fun onIdFrontCaptured(file: File) { _uiState.value = _uiState.value.copy(idFrontFile = file, step = 4) }
     fun onIdBackCaptured(file: File) { _uiState.value = _uiState.value.copy(idBackFile = file, step = 5) }
+    fun onResidenceCaptured(file: File) { _uiState.value = _uiState.value.copy(residenceFile = file, step = 6) }
+    fun onSkipResidence() { _uiState.value = _uiState.value.copy(step = 6) }
     fun onSelfieCaptured(file: File) { _uiState.value = _uiState.value.copy(selfieFile = file) }
+
+    fun onStartBusinessPhotoCapture() { _uiState.value = _uiState.value.copy(isCapturingBusinessPhoto = true) }
+    fun onCancelBusinessPhotoCapture() { _uiState.value = _uiState.value.copy(isCapturingBusinessPhoto = false) }
+    fun onBusinessPhotoCaptured(file: File) {
+        _uiState.value = _uiState.value.copy(
+            businessImageFiles = _uiState.value.businessImageFiles + file,
+            isCapturingBusinessPhoto = false
+        )
+    }
+    fun onRemoveBusinessImage(file: File) {
+        _uiState.value = _uiState.value.copy(businessImageFiles = _uiState.value.businessImageFiles - file)
+    }
 
     fun goBack() {
         _uiState.value = _uiState.value.copy(step = (_uiState.value.step - 1).coerceAtLeast(1), error = null)
@@ -191,6 +208,10 @@ class AddCustomerViewModel @Inject constructor(
                 val idFrontUrl = repository.uploadPhoto(idFront, "documents").getOrThrow()
                 val idBackUrl = repository.uploadPhoto(idBack, "documents").getOrThrow()
                 val selfieUrl = repository.uploadPhoto(selfie, "customers").getOrThrow()
+                val houseImageUrl = s.residenceFile?.let { repository.uploadPhoto(it, "documents").getOrThrow() }
+                val businessImageUrls = s.businessImageFiles.map {
+                    repository.uploadPhoto(it, "business_images").getOrThrow()
+                }
                 val spouse = if (s.maritalStatus == "Married") {
                     SpouseFields(
                         name = s.spouseName,
@@ -237,9 +258,11 @@ class AddCustomerViewModel @Inject constructor(
                         yearEstablished = s.yearEstablished.ifBlank { null },
                         idFrontUrl = idFrontUrl,
                         idBackUrl = idBackUrl,
-                        passportUrl = selfieUrl
+                        passportUrl = selfieUrl,
+                        houseImageUrl = houseImageUrl
                     ),
-                    spouse = spouse
+                    spouse = spouse,
+                    businessImages = businessImageUrls.ifEmpty { null }
                 ).getOrThrow()
             }
             result

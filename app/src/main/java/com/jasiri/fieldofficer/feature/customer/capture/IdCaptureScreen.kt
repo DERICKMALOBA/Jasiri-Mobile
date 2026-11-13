@@ -37,6 +37,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -76,7 +77,8 @@ fun IdCaptureScreen(
     aspectRatio: Float,
     useFrontCamera: Boolean = false,
     onCaptured: (File) -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onSkip: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -105,7 +107,12 @@ fun IdCaptureScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack) { Icon(Icons.Filled.ArrowBack, contentDescription = "Back") }
                 },
-                actions = { Text(stepLabel, modifier = Modifier.padding(end = 16.dp)) }
+                actions = {
+                    if (onSkip != null) {
+                        TextButton(onClick = onSkip) { Text("Skip") }
+                    }
+                    Text(stepLabel, modifier = Modifier.padding(end = 16.dp))
+                }
             )
         }
     ) { padding ->

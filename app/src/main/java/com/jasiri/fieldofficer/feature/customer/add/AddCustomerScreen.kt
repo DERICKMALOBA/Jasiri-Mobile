@@ -4,16 +4,22 @@ import android.Manifest
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddAPhoto
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -32,8 +38,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jasiri.fieldofficer.core.location.DeviceLocationProvider
@@ -71,8 +80,21 @@ fun AddCustomerScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
-    val onSelfieStep = state.step == 5 && state.selfieFile == null
-    if (state.step in 3..4 || onSelfieStep) {
+    if (state.isCapturingBusinessPhoto) {
+        IdCaptureScreen(
+            stepLabel = "Business Photo",
+            title = "Business Photo",
+            instruction = "Capture a photo of the business premises or stock.",
+            aspectRatio = ID_CARD_ASPECT,
+            useFrontCamera = false,
+            onCaptured = { viewModel.onBusinessPhotoCaptured(it) },
+            onBack = viewModel::onCancelBusinessPhotoCapture
+        )
+        return
+    }
+
+    val onSelfieStep = state.step == 6 && state.selfieFile == null
+    if (state.step in 3..5 || onSelfieStep) {
         val spec = when (state.step) {
             3 -> CaptureSpec(
                 "Front of National ID",
@@ -86,6 +108,12 @@ fun AddCustomerScreen(
                 ID_CARD_ASPECT,
                 useFrontCamera = false
             ) { viewModel.onIdBackCaptured(it) }
+            5 -> CaptureSpec(
+                "Residence Photo",
+                "Capture a photo of the customer's residence.",
+                ID_CARD_ASPECT,
+                useFrontCamera = false
+            ) { viewModel.onResidenceCaptured(it) }
             else -> CaptureSpec(
                 "Selfie",
                 "Center your face within the frame.",
@@ -101,7 +129,9 @@ fun AddCustomerScreen(
                 aspectRatio = spec.aspectRatio,
                 useFrontCamera = spec.useFrontCamera,
                 onCaptured = spec.onCaptured,
-                onBack = viewModel::goBack
+                onBack = viewModel::goBack,
+                // Residence Image is tenant-conditional on the web app, unlike ID/selfie — skippable here.
+                onSkip = if (state.step == 5) viewModel::onSkipResidence else null
             )
         }
         return
@@ -134,7 +164,7 @@ fun AddCustomerScreen(
                 when (state.step) {
                     1 -> PersonalInfoStep(state, viewModel)
                     2 -> BusinessInfoStep(state, viewModel)
-                    5 -> ReviewSubmitStep(state)
+                    6 -> ReviewSubmitStep(state)
                 }
 
                 state.error?.let {
@@ -152,7 +182,7 @@ fun AddCustomerScreen(
                     onClick = viewModel::nextStep,
                     modifier = Modifier.fillMaxWidth().padding(16.dp)
                 ) { Text("Continue") }
-                5 -> Button(
+                6 -> Button(
                     onClick = { viewModel.submit(onDone) },
                     enabled = !state.isSubmitting,
                     modifier = Modifier.fillMaxWidth().padding(16.dp)
@@ -274,6 +304,32 @@ private fun BusinessInfoStep(state: AddCustomerUiState, viewModel: AddCustomerVi
             }
             Text(" Get Current Location")
         }
+
+        Text("Business Images", style = MaterialTheme.typography.titleSmall)
+        if (state.businessImageFiles.isNotEmpty()) {
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(state.businessImageFiles, key = { it.absolutePath }) { file ->
+                    Box {
+                        AsyncImage(
+                            model = file,
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.size(80.dp).clip(RoundedCornerShape(8.dp))
+                        )
+                        IconButton(
+                            onClick = { viewModel.onRemoveBusinessImage(file) },
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(Icons.Filled.Close, contentDescription = "Remove", tint = MaterialTheme.colorScheme.error)
+                        }
+                    }
+                }
+            }
+        }
+        OutlinedButton(onClick = viewModel::onStartBusinessPhotoCapture, modifier = Modifier.fillMaxWidth()) {
+            Icon(Icons.Filled.AddAPhoto, contentDescription = null)
+            Text(" Add Business Photo")
+        }
     }
 }
 
@@ -285,5 +341,11 @@ private fun ReviewSubmitStep(state: AddCustomerUiState) {
         Text("ID: ${state.idNumber}")
         Text("Business: ${state.businessName}")
         Text("ID front, ID back and selfie captured ✓", color = MaterialTheme.colorScheme.primary)
+        if (state.residenceFile != null) {
+            Text("Residence photo captured ✓", color = MaterialTheme.colorScheme.primary)
+        }
+        if (state.businessImageFiles.isNotEmpty()) {
+            Text("${state.businessImageFiles.size} business photo(s) attached", color = MaterialTheme.colorScheme.primary)
+        }
     }
 }

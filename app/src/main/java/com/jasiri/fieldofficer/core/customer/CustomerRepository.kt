@@ -90,8 +90,14 @@ class CustomerRepository @Inject constructor(
         result.url
     }
 
-    suspend fun createCustomer(fields: CreateCustomerFields, spouse: SpouseFields? = null): Result<CustomerDto?> = runCatching {
-        api.createCustomerFull(CreateCustomerRequest(customer = fields, spouse = spouse)).data?.customer
+    suspend fun createCustomer(
+        fields: CreateCustomerFields,
+        spouse: SpouseFields? = null,
+        businessImages: List<String>? = null
+    ): Result<CustomerDto?> = runCatching {
+        api.createCustomerFull(
+            CreateCustomerRequest(customer = fields, spouse = spouse, businessImages = businessImages)
+        ).data?.customer
     }
 
     private fun sha256(file: File): String {

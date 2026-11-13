@@ -138,6 +138,7 @@ data class CreateCustomerFields(
     @SerialName("passport_url") val passportUrl: String? = null,
     @SerialName("id_front_url") val idFrontUrl: String? = null,
     @SerialName("id_back_url") val idBackUrl: String? = null,
+    @SerialName("house_image_url") val houseImageUrl: String? = null,
     @SerialName("form_status") val formStatus: String = "submitted"
 )
 
@@ -154,7 +155,10 @@ data class SpouseFields(
 data class CreateCustomerRequest(
     val customer: CreateCustomerFields,
     val customerId: Long? = null,
-    val spouse: SpouseFields? = null
+    val spouse: SpouseFields? = null,
+    // Top-level, sibling of `customer` — backend inserts one business_images row per URL
+    // using the customer id resolved in this same request (see CustomerServiceImpl).
+    val businessImages: List<String>? = null
 )
 
 @Serializable
