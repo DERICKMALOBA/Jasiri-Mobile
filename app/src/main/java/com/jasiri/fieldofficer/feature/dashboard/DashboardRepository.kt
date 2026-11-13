@@ -33,14 +33,20 @@ class DashboardRepository @Inject constructor(
             loansDisbursedProgressPct = 0,
             collectionsProgressPct = 0,
             leadsCount = 12,
-            totalLoansCount = 48,
             outstandingLoanBalance = 862_400.0,
-            cleanBookPct = 91,
-            collectionRatePct = 87,
-            portfolioAtRiskPct = 6,
+            olbCount = 48,
+            arrearsDueTodayAmount = 14_200.0,
+            arrearsDueTodayCount = 3,
+            activeLoansAmount = 724_600.0,
             activeLoansCount = 34,
+            overdueLoansAmount = 97_800.0,
             overdueLoansCount = 8,
-            fullyPaidLoansCount = 6
+            fullyPaidLoansAmount = 40_000.0,
+            fullyPaidLoansCount = 6,
+            collectionsDueTodayAmount = 22_500.0,
+            collectionsDueTodayCount = 5,
+            collectionsDueThisMonthAmount = 318_900.0,
+            collectionsDueThisMonthCount = 41
         )
     }
 }

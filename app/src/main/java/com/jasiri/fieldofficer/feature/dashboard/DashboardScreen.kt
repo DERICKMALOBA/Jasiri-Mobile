@@ -15,8 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -47,10 +45,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.jasiri.fieldofficer.core.network.dto.DashboardSummaryDto
 import java.util.Locale
 
 private data class QuickAction(val label: String, val icon: ImageVector, val onClick: () -> Unit)
-private data class StatTile(val label: String, val value: String, val accent: Color? = null)
 
 @Composable
 fun DashboardScreen(
@@ -76,24 +74,6 @@ fun DashboardScreen(
 
         val summary = state.summary ?: return@Column
 
-        val riskColor = when {
-            summary.portfolioAtRiskPct >= 10 -> MaterialTheme.colorScheme.error
-            summary.portfolioAtRiskPct >= 5 -> Color(0xFFB8860B)
-            else -> MaterialTheme.colorScheme.primary
-        }
-        val statTiles = listOf(
-            StatTile("Leads", summary.leadsCount.toString()),
-            StatTile("Total Loans", summary.totalLoansCount.toString()),
-            StatTile("OLB", formatMoney(summary.outstandingLoanBalance)),
-            StatTile("Clean Book", "${summary.cleanBookPct}%"),
-            StatTile("Collection Rate", "${summary.collectionRatePct}%"),
-            StatTile("Portfolio Risk", "${summary.portfolioAtRiskPct}%", riskColor)
-        )
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            items(statTiles) { tile -> StatTileCard(tile) }
-        }
-        Spacer(Modifier.height(16.dp))
-
         if (state.isPlaceholder) {
             Surface(
                 color = MaterialTheme.colorScheme.errorContainer,
@@ -110,31 +90,10 @@ fun DashboardScreen(
             Spacer(Modifier.height(12.dp))
         }
 
-        Card(
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(Modifier.padding(16.dp)) {
-                Text("Today's Goal", color = Color.White, style = MaterialTheme.typography.labelLarge)
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    summary.todayGoalLabel,
-                    color = Color.White,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(Modifier.height(8.dp))
-                val progress = if (summary.todayStopsTotal > 0) {
-                    summary.todayStopsPlanned / summary.todayStopsTotal.toFloat()
-                } else 0f
-                LinearProgressIndicator(
-                    progress = progress,
-                    modifier = Modifier.fillMaxWidth(),
-                    color = Color.White,
-                    trackColor = Color.White.copy(alpha = 0.3f)
-                )
-            }
-        }
+        LoanOverviewCard(summary)
+
+        Spacer(Modifier.height(16.dp))
+        TodayGoalCard(summary)
 
         Spacer(Modifier.height(20.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
@@ -144,19 +103,29 @@ fun DashboardScreen(
         }
 
         Spacer(Modifier.height(24.dp))
-        Text("Loan Portfolio", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        SectionHeading("Loan Portfolio")
         Spacer(Modifier.height(8.dp))
         Card(Modifier.fillMaxWidth()) {
-            Column(Modifier.padding(16.dp)) {
-                LoanPortfolioRow("Active", summary.activeLoansCount, MaterialTheme.colorScheme.primary)
-                Spacer(Modifier.height(10.dp))
-                LoanPortfolioRow("Overdue", summary.overdueLoansCount, MaterialTheme.colorScheme.error)
-                Spacer(Modifier.height(10.dp))
-                LoanPortfolioRow("Fully Paid", summary.fullyPaidLoansCount, MaterialTheme.colorScheme.secondary)
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                LoanPortfolioRow("Active", summary.activeLoansAmount, summary.activeLoansCount, MaterialTheme.colorScheme.primary)
+                LoanPortfolioRow("Overdue", summary.overdueLoansAmount, summary.overdueLoansCount, MaterialTheme.colorScheme.error)
+                LoanPortfolioRow("Fully Paid", summary.fullyPaidLoansAmount, summary.fullyPaidLoansCount, MaterialTheme.colorScheme.secondary)
             }
         }
 
         Spacer(Modifier.height(24.dp))
+        SectionHeading("Collections")
+        Spacer(Modifier.height(8.dp))
+        Card(Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                LoanPortfolioRow("Due Today", summary.collectionsDueTodayAmount, summary.collectionsDueTodayCount, MaterialTheme.colorScheme.tertiary)
+                LoanPortfolioRow("Due This Month", summary.collectionsDueThisMonthAmount, summary.collectionsDueThisMonthCount, MaterialTheme.colorScheme.secondary)
+            }
+        }
+
+        Spacer(Modifier.height(24.dp))
+        SectionHeading("Quick Actions")
+        Spacer(Modifier.height(8.dp))
         val quickActions = listOf(
             QuickAction("New Customer", Icons.Filled.PersonAdd, onNewCustomer),
             QuickAction("New Lead", Icons.Filled.PersonSearch, onNewLead),
@@ -172,6 +141,65 @@ fun DashboardScreen(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun SectionHeading(title: String) {
+    Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+}
+
+/** The dashboard's headline element — loan exposure at a glance, replacing "Today's Goal" as the focal card. */
+@Composable
+private fun LoanOverviewCard(summary: DashboardSummaryDto) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(Modifier.padding(16.dp)) {
+            Text("Loan Overview", color = Color.White, style = MaterialTheme.typography.labelLarge)
+            Spacer(Modifier.height(12.dp))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                HeroStat("OLB", formatMoney(summary.outstandingLoanBalance), "${summary.olbCount} loans")
+                HeroStat(
+                    "Arrears",
+                    formatMoney(summary.overdueLoansAmount),
+                    "${summary.overdueLoansCount} loans"
+                )
+                HeroStat(
+                    "Due Today",
+                    formatMoney(summary.arrearsDueTodayAmount),
+                    "${summary.arrearsDueTodayCount} loans"
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun HeroStat(label: String, amount: String, countLabel: String) {
+    Column {
+        Text(label, color = Color.White.copy(alpha = 0.8f), style = MaterialTheme.typography.labelSmall)
+        Spacer(Modifier.height(2.dp))
+        Text(amount, color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        Text(countLabel, color = Color.White.copy(alpha = 0.8f), style = MaterialTheme.typography.labelSmall)
+    }
+}
+
+/** Demoted from the old hero spot — still visible, no longer the loudest element on the screen. */
+@Composable
+private fun TodayGoalCard(summary: DashboardSummaryDto) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp)) {
+            Text("Today's Goal", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(Modifier.height(4.dp))
+            Text(summary.todayGoalLabel, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(8.dp))
+            val progress = if (summary.todayStopsTotal > 0) {
+                summary.todayStopsPlanned / summary.todayStopsTotal.toFloat()
+            } else 0f
+            LinearProgressIndicator(progress = progress, modifier = Modifier.fillMaxWidth())
         }
     }
 }
@@ -213,29 +241,8 @@ private fun ProgressRing(label: String, percent: Int) {
 }
 
 @Composable
-private fun StatTileCard(tile: StatTile) {
-    Card(modifier = Modifier.width(104.dp)) {
-        Column(Modifier.padding(10.dp)) {
-            Text(
-                tile.value,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = tile.accent ?: MaterialTheme.colorScheme.onSurface
-            )
-            Spacer(Modifier.height(2.dp))
-            Text(
-                tile.label,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1
-            )
-        }
-    }
-}
-
-@Composable
-private fun LoanPortfolioRow(label: String, count: Int, color: Color) {
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+private fun LoanPortfolioRow(label: String, amount: Double, count: Int, color: Color) {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
                 modifier = Modifier
@@ -245,7 +252,14 @@ private fun LoanPortfolioRow(label: String, count: Int, color: Color) {
             Spacer(Modifier.width(8.dp))
             Text(label, style = MaterialTheme.typography.bodyMedium)
         }
-        Text("$count loans", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+        Column(horizontalAlignment = Alignment.End) {
+            Text(formatMoney(amount), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+            Text(
+                "$count loans",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
     }
 }
 
