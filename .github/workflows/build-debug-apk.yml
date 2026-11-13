@@ -1,0 +1,52 @@
+name: Build debug APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      # gradle.properties points org.gradle.java.home at the dev machine's local
+      # Android Studio JBR install, which doesn't exist on the runner — drop it so
+      # Gradle falls back to the JDK setup-java just put on PATH/JAVA_HOME.
+      - name: Remove dev-machine-only JDK override
+        run: sed -i '/org.gradle.java.home/d' gradle.properties
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Install the Android SDK platform this project compiles against
+        run: |
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager "platforms;android-37" "platform-tools"
+
+      - name: Build debug APK
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: jasiri-field-officer-debug
+          path: app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Publish a downloadable release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: debug-${{ github.run_number }}
+          name: Debug build #${{ github.run_number }}
+          body: |
+            Auto-built from ${{ github.sha }}.
+            Debug build — login and customer data use mock fallbacks while the backend DB is unavailable.
+          prerelease: true
+          files: app/build/outputs/apk/debug/app-debug.apk
