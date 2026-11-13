@@ -56,7 +56,8 @@ private data class StatTile(val label: String, val value: String, val accent: Co
 fun DashboardScreen(
     viewModel: DashboardViewModel = hiltViewModel(),
     onNewCustomer: () -> Unit = {},
-    onNewLead: () -> Unit = {}
+    onNewLead: () -> Unit = {},
+    onStartRoute: () -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -159,7 +160,7 @@ fun DashboardScreen(
         val quickActions = listOf(
             QuickAction("New Customer", Icons.Filled.PersonAdd, onNewCustomer),
             QuickAction("New Lead", Icons.Filled.PersonSearch, onNewLead),
-            QuickAction("Start Route", Icons.Filled.Place) {},
+            QuickAction("Start Route", Icons.Filled.Place, onStartRoute),
             QuickAction("Collect Payment", Icons.Filled.AccountBalanceWallet) {},
             QuickAction("My Targets", Icons.Filled.TrackChanges) {}
         )

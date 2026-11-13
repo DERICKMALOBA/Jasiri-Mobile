@@ -6,8 +6,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -15,15 +22,19 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.jasiri.fieldofficer.core.leads.INDUSTRY_BUSINESS_TYPES
+import com.jasiri.fieldofficer.core.leads.KENYA_COUNTIES
+import com.jasiri.fieldofficer.core.leads.OTHER_OPTION
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,35 +57,99 @@ fun AddLeadScreen(
             )
         }
     ) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding).padding(16.dp)) {
-            OutlinedTextField(
-                value = state.name,
-                onValueChange = viewModel::onNameChange,
-                label = { Text("Name") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(Modifier.height(12.dp))
+        Column(
+            Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(padding)
+                .padding(16.dp)
+        ) {
             OutlinedTextField(
                 value = state.mobile,
                 onValueChange = viewModel::onMobileChange,
-                label = { Text("Phone number") },
+                label = { Text("Mobile Phone") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(Modifier.height(12.dp))
             OutlinedTextField(
-                value = state.businessIdea,
-                onValueChange = viewModel::onBusinessIdeaChange,
-                label = { Text("Business idea") },
+                value = state.firstname,
+                onValueChange = viewModel::onFirstnameChange,
+                label = { Text("First Name") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(Modifier.height(12.dp))
             OutlinedTextField(
-                value = state.notes,
-                onValueChange = viewModel::onNotesChange,
-                label = { Text("Notes") },
+                value = state.surname,
+                onValueChange = viewModel::onSurnameChange,
+                label = { Text("Surname") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(Modifier.height(12.dp))
+            OutlinedTextField(
+                value = state.businessName,
+                onValueChange = viewModel::onBusinessNameChange,
+                label = { Text("Business / Enterprise Name") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(Modifier.height(12.dp))
+            DropdownField(
+                label = "Industry Segment",
+                selected = state.industry,
+                options = INDUSTRY_BUSINESS_TYPES.keys.toList() + OTHER_OPTION,
+                onSelected = viewModel::onIndustryChange
+            )
+            if (state.industry == OTHER_OPTION) {
+                Spacer(Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = state.industryOther,
+                    onValueChange = viewModel::onIndustryOtherChange,
+                    label = { Text("Specify Industry") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
+            if (state.industry.isNotBlank()) {
+                Spacer(Modifier.height(12.dp))
+                val businessTypeOptions = (INDUSTRY_BUSINESS_TYPES[state.industry] ?: emptyList()) + OTHER_OPTION
+                DropdownField(
+                    label = "Business Type",
+                    selected = state.businessType,
+                    options = businessTypeOptions,
+                    onSelected = viewModel::onBusinessTypeChange
+                )
+                if (state.businessType == OTHER_OPTION) {
+                    Spacer(Modifier.height(12.dp))
+                    OutlinedTextField(
+                        value = state.businessTypeOther,
+                        onValueChange = viewModel::onBusinessTypeOtherChange,
+                        label = { Text("Specify Business Type") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(12.dp))
+            DropdownField(
+                label = "Operational Location (County)",
+                selected = state.county,
+                options = KENYA_COUNTIES,
+                onSelected = viewModel::onCountyChange
+            )
+
+            Spacer(Modifier.height(12.dp))
+            OutlinedTextField(
+                value = "Field Agent",
+                onValueChange = {},
+                label = { Text("Lead Source") },
+                enabled = false,
+                singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -86,6 +161,38 @@ fun AddLeadScreen(
             Spacer(Modifier.height(20.dp))
             Button(onClick = viewModel::save, modifier = Modifier.fillMaxWidth().height(48.dp)) {
                 Text("Save Lead")
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DropdownField(
+    label: String,
+    selected: String,
+    options: List<String>,
+    onSelected: (String) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
+        OutlinedTextField(
+            value = selected,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text(label) },
+            trailingIcon = { Icon(Icons.Filled.ArrowDropDown, contentDescription = null) },
+            modifier = Modifier.fillMaxWidth().menuAnchor()
+        )
+        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            options.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text(option) },
+                    onClick = {
+                        onSelected(option)
+                        expanded = false
+                    }
+                )
             }
         }
     }

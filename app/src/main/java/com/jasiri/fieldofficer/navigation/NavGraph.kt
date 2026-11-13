@@ -31,6 +31,9 @@ import com.jasiri.fieldofficer.feature.customer.detail.CustomerDetailScreen
 import com.jasiri.fieldofficer.feature.customer.list.CustomerListScreen
 import com.jasiri.fieldofficer.feature.dashboard.DashboardScreen
 import com.jasiri.fieldofficer.feature.leads.AddLeadScreen
+import com.jasiri.fieldofficer.feature.routes.RoutesScreen
+import com.jasiri.fieldofficer.feature.routes.SelectVisitCustomersScreen
+import com.jasiri.fieldofficer.feature.routes.VisitOutcomeScreen
 
 private data class BottomNavItem(val destination: Destination, val icon: ImageVector, val label: String)
 
@@ -74,7 +77,14 @@ fun FieldOfficerNavGraph(navController: NavHostController = rememberNavControlle
             composable(Destination.Home.route) {
                 DashboardScreen(
                     onNewCustomer = { navController.navigate(Destination.AddCustomer.route) },
-                    onNewLead = { navController.navigate(Destination.AddLead.route) }
+                    onNewLead = { navController.navigate(Destination.AddLead.route) },
+                    onStartRoute = {
+                        navController.navigate(Destination.Routes.route) {
+                            popUpTo(navController.graph.startDestinationId) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
                 )
             }
             composable(Destination.Customers.route) {
@@ -104,7 +114,24 @@ fun FieldOfficerNavGraph(navController: NavHostController = rememberNavControlle
                 val customerId = backStackEntry.arguments?.getLong("customerId") ?: 0L
                 CustomerDetailScreen(customerId = customerId, onBack = { navController.popBackStack() })
             }
-            composable(Destination.Routes.route) { ComingSoonScreen("Daily Routes") }
+            composable(Destination.Routes.route) {
+                RoutesScreen(
+                    onArrive = { stopId -> navController.navigate(Destination.VisitOutcome.createRoute(stopId)) },
+                    onPlanVisits = { navController.navigate(Destination.SelectVisitCustomers.route) }
+                )
+            }
+            composable(
+                Destination.VisitOutcome.route,
+                arguments = listOf(navArgument("stopId") { type = NavType.LongType })
+            ) {
+                VisitOutcomeScreen(onBack = { navController.popBackStack() })
+            }
+            composable(Destination.SelectVisitCustomers.route) {
+                SelectVisitCustomersScreen(
+                    onDone = { navController.popBackStack() },
+                    onCancel = { navController.popBackStack() }
+                )
+            }
             composable(Destination.Collections.route) { ComingSoonScreen("Collections") }
             composable(Destination.Targets.route) { ComingSoonScreen("Targets") }
         }

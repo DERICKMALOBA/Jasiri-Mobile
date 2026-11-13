@@ -8,10 +8,15 @@ import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 
 data class AddLeadUiState(
-    val name: String = "",
     val mobile: String = "",
-    val businessIdea: String = "",
-    val notes: String = "",
+    val firstname: String = "",
+    val surname: String = "",
+    val businessName: String = "",
+    val industry: String = "",
+    val industryOther: String = "",
+    val businessType: String = "",
+    val businessTypeOther: String = "",
+    val county: String = "",
     val error: String? = null,
     val isComplete: Boolean = false
 )
@@ -24,22 +29,41 @@ class AddLeadViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(AddLeadUiState())
     val uiState = _uiState.asStateFlow()
 
-    fun onNameChange(v: String) { _uiState.value = _uiState.value.copy(name = v, error = null) }
     fun onMobileChange(v: String) { _uiState.value = _uiState.value.copy(mobile = v, error = null) }
-    fun onBusinessIdeaChange(v: String) { _uiState.value = _uiState.value.copy(businessIdea = v) }
-    fun onNotesChange(v: String) { _uiState.value = _uiState.value.copy(notes = v) }
+    fun onFirstnameChange(v: String) { _uiState.value = _uiState.value.copy(firstname = v, error = null) }
+    fun onSurnameChange(v: String) { _uiState.value = _uiState.value.copy(surname = v, error = null) }
+    fun onBusinessNameChange(v: String) { _uiState.value = _uiState.value.copy(businessName = v, error = null) }
+    fun onIndustryChange(v: String) {
+        _uiState.value = _uiState.value.copy(industry = v, businessType = "", businessTypeOther = "")
+    }
+    fun onIndustryOtherChange(v: String) { _uiState.value = _uiState.value.copy(industryOther = v) }
+    fun onBusinessTypeChange(v: String) { _uiState.value = _uiState.value.copy(businessType = v) }
+    fun onBusinessTypeOtherChange(v: String) { _uiState.value = _uiState.value.copy(businessTypeOther = v) }
+    fun onCountyChange(v: String) { _uiState.value = _uiState.value.copy(county = v) }
 
     fun save() {
         val s = _uiState.value
-        if (s.name.isBlank()) {
-            _uiState.value = s.copy(error = "Enter the lead's name")
-            return
-        }
         if (!s.mobile.matches(Regex("^[0-9]{10,15}$"))) {
             _uiState.value = s.copy(error = "Enter a valid phone number (digits only)")
             return
         }
-        leadRepository.addLead(name = s.name, mobile = s.mobile, businessIdea = s.businessIdea, notes = s.notes)
+        if (s.firstname.isBlank() || s.surname.isBlank()) {
+            _uiState.value = s.copy(error = "Enter the lead's first name and surname")
+            return
+        }
+        if (s.businessName.isBlank()) {
+            _uiState.value = s.copy(error = "Enter the business / enterprise name")
+            return
+        }
+        leadRepository.addLead(
+            mobile = s.mobile,
+            firstname = s.firstname,
+            surname = s.surname,
+            businessName = s.businessName,
+            industry = s.industry.ifBlank { s.industryOther },
+            businessType = s.businessType.ifBlank { s.businessTypeOther },
+            county = s.county
+        )
         _uiState.value = s.copy(isComplete = true)
     }
 }

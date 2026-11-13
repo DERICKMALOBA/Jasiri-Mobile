@@ -19,13 +19,39 @@ class LeadRepository @Inject constructor() {
     private val _leads = MutableStateFlow(seedLeads())
     val leads: StateFlow<List<Lead>> = _leads
 
-    fun addLead(name: String, mobile: String, businessIdea: String, notes: String = ""): Lead {
-        val lead = Lead(id = nextId.incrementAndGet(), name = name, mobile = mobile, businessIdea = businessIdea, notes = notes)
+    fun addLead(
+        mobile: String,
+        firstname: String,
+        surname: String,
+        businessName: String,
+        industry: String,
+        businessType: String,
+        county: String
+    ): Lead {
+        val lead = Lead(
+            id = nextId.incrementAndGet(),
+            mobile = mobile,
+            firstname = firstname,
+            surname = surname,
+            businessName = businessName,
+            industry = industry,
+            businessType = businessType,
+            county = county
+        )
         _leads.value = _leads.value + lead
         return lead
     }
 
     private fun seedLeads(): List<Lead> = (1..12).map { n ->
-        Lead(id = nextId.incrementAndGet(), name = "Lead #$n", mobile = "", businessIdea = "")
+        Lead(
+            id = nextId.incrementAndGet(),
+            mobile = "",
+            firstname = "Lead",
+            surname = "#$n",
+            businessName = "",
+            industry = "",
+            businessType = "",
+            county = ""
+        )
     }
 }
