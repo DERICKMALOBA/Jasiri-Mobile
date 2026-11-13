@@ -71,3 +71,15 @@ val GENDER_OPTIONS = listOf("Male", "Female")
 val MARITAL_STATUS_OPTIONS = listOf("Single", "Married", "Separated/Divorced", "Other")
 val RESIDENCE_STATUS_OPTIONS = listOf("Own", "Rent", "Family", "Other")
 val YES_NO_OPTIONS = listOf("Yes", "No")
+
+/** The 12 preset security-type categories from CustomerForm.jsx — any other typed value is
+ * sent as-is (there's no separate "other" column, the string itself IS the `item` value). */
+val SECURITY_ITEM_CATEGORIES = listOf(
+    "Household Items", "Business Equipment", "Livestock", "Motor Vehicle", "Motorbike",
+    "Land / Property", "Title deed", "Logbook", "Salary Check-off", "Stock / Inventory",
+    "Fixed deposit / Savings security", "Electronics"
+)
+
+val GUARANTOR_RELATIONSHIP_OPTIONS = listOf("Spouse", "Father", "Mother", "Sibling", "Child", "Friend", "Other")
+val NEXT_OF_KIN_RELATIONSHIP_OPTIONS = listOf("Spouse", "Parent", "Sibling", "Child", "Other")
+val EMPLOYMENT_STATUS_OPTIONS = listOf("Employed", "Self Employed")

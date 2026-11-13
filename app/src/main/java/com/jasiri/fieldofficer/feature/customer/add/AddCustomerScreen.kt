@@ -3,6 +3,7 @@ package com.jasiri.fieldofficer.feature.customer.add
 import android.Manifest
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,6 +23,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -37,10 +39,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -93,22 +97,99 @@ fun AddCustomerScreen(
         return
     }
 
-    val onSelfieStep = state.step == 6 && state.selfieFile == null
-    if (state.step in 3..5 || onSelfieStep) {
+    if (state.isCapturingSecurityItemPhoto) {
+        IdCaptureScreen(
+            stepLabel = "Security Item Photo",
+            title = "Security Item Photo",
+            instruction = "Capture a photo of the security item.",
+            aspectRatio = ID_CARD_ASPECT,
+            useFrontCamera = false,
+            onCaptured = { viewModel.onSecurityItemPhotoCaptured(it) },
+            onBack = viewModel::onCancelCaptureSecurityItemPhoto
+        )
+        return
+    }
+
+    val guarantorPhotoSlot = state.capturingGuarantorPhotoSlot
+    if (guarantorPhotoSlot != null) {
+        val label = when (guarantorPhotoSlot) {
+            "passport" -> "Guarantor Passport Photo"
+            "idFront" -> "Guarantor ID Front"
+            else -> "Guarantor ID Back"
+        }
+        IdCaptureScreen(
+            stepLabel = label,
+            title = label,
+            instruction = "Align the photo within the frame.",
+            aspectRatio = if (guarantorPhotoSlot == "passport") SELFIE_ASPECT else ID_CARD_ASPECT,
+            useFrontCamera = false,
+            onCaptured = { viewModel.onGuarantorPhotoCaptured(it) },
+            onBack = viewModel::onCancelCaptureGuarantorPhoto
+        )
+        return
+    }
+
+    val editingSecurityItem = state.editingSecurityItem
+    if (editingSecurityItem != null) {
+        SecurityItemFormScreen(
+            draft = editingSecurityItem,
+            onItemChange = { viewModel.onSecurityItemFieldChange(item = it) },
+            onItemOtherChange = { viewModel.onSecurityItemFieldChange(itemOther = it) },
+            onDescriptionChange = { viewModel.onSecurityItemFieldChange(description = it) },
+            onIdentificationChange = { viewModel.onSecurityItemFieldChange(identification = it) },
+            onValueChange = { viewModel.onSecurityItemFieldChange(value = it) },
+            onAddPhoto = viewModel::onStartCaptureSecurityItemPhoto,
+            onRemovePhoto = viewModel::onRemoveSecurityItemPhoto,
+            onSave = viewModel::onSaveSecurityItem,
+            onCancel = viewModel::onCancelSecurityItemEdit
+        )
+        return
+    }
+
+    val editingGuarantor = state.editingGuarantor
+    if (editingGuarantor != null) {
+        val isFirstGuarantor = (state.editingGuarantorIndex ?: state.guarantors.size) == 0
+        GuarantorFormScreen(
+            draft = editingGuarantor,
+            isFirstGuarantor = isFirstGuarantor,
+            onFieldChange = viewModel::onGuarantorFieldChange,
+            onCapturePhoto = viewModel::onStartCaptureGuarantorPhoto,
+            onAddSecurityItem = { viewModel.onStartAddSecurityItem(SecurityItemContext.GUARANTOR) },
+            onEditSecurityItem = { viewModel.onStartEditSecurityItem(SecurityItemContext.GUARANTOR, it) },
+            onRemoveSecurityItem = { viewModel.onRemoveSecurityItem(SecurityItemContext.GUARANTOR, it) },
+            onSave = viewModel::onSaveGuarantor,
+            onCancel = viewModel::onCancelGuarantorEdit
+        )
+        return
+    }
+
+    val editingNextOfKin = state.editingNextOfKin
+    if (editingNextOfKin != null) {
+        NextOfKinFormScreen(
+            draft = editingNextOfKin,
+            onFieldChange = viewModel::onNextOfKinFieldChange,
+            onSave = viewModel::onSaveNextOfKin,
+            onCancel = viewModel::onCancelNextOfKinEdit
+        )
+        return
+    }
+
+    val onSelfieStep = state.step == 8 && state.selfieFile == null
+    if (state.step in 5..7 || onSelfieStep) {
         val spec = when (state.step) {
-            3 -> CaptureSpec(
+            5 -> CaptureSpec(
                 "Front of National ID",
                 "Align the front of the ID within the frame.",
                 ID_CARD_ASPECT,
                 useFrontCamera = false
             ) { viewModel.onIdFrontCaptured(it) }
-            4 -> CaptureSpec(
+            6 -> CaptureSpec(
                 "Back of National ID",
                 "Align the back of the ID within the frame.",
                 ID_CARD_ASPECT,
                 useFrontCamera = false
             ) { viewModel.onIdBackCaptured(it) }
-            5 -> CaptureSpec(
+            7 -> CaptureSpec(
                 "Residence Photo",
                 "Capture a photo of the customer's residence.",
                 ID_CARD_ASPECT,
@@ -131,7 +212,7 @@ fun AddCustomerScreen(
                 onCaptured = spec.onCaptured,
                 onBack = viewModel::goBack,
                 // Residence Image is tenant-conditional on the web app, unlike ID/selfie — skippable here.
-                onSkip = if (state.step == 5) viewModel::onSkipResidence else null
+                onSkip = if (state.step == 7) viewModel::onSkipResidence else null
             )
         }
         return
@@ -164,7 +245,9 @@ fun AddCustomerScreen(
                 when (state.step) {
                     1 -> PersonalInfoStep(state, viewModel)
                     2 -> BusinessInfoStep(state, viewModel)
-                    6 -> ReviewSubmitStep(state)
+                    3 -> GuarantorsStep(state, viewModel)
+                    4 -> NextOfKinStep(state, viewModel)
+                    8 -> ReviewSubmitStep(state)
                 }
 
                 state.error?.let {
@@ -178,11 +261,11 @@ fun AddCustomerScreen(
             }
 
             when (state.step) {
-                1, 2 -> Button(
+                1, 2, 3, 4 -> Button(
                     onClick = viewModel::nextStep,
                     modifier = Modifier.fillMaxWidth().padding(16.dp)
                 ) { Text("Continue") }
-                6 -> Button(
+                8 -> Button(
                     onClick = { viewModel.submit(onDone) },
                     enabled = !state.isSubmitting,
                     modifier = Modifier.fillMaxWidth().padding(16.dp)
@@ -269,6 +352,7 @@ private fun BusinessInfoStep(state: AddCustomerUiState, viewModel: AddCustomerVi
 
         FormDateField("Year Established", state.yearEstablished, viewModel::onYearEstablishedChange)
         OutlinedTextField(state.dailySales, viewModel::onDailySalesChange, label = { Text("Daily Sales (KES)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(state.requestedAmount, viewModel::onRequestedAmountChange, label = { Text("Requested Loan Amount (KES)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
         FormDropdownField("County", state.businessCounty, KENYA_COUNTIES, viewModel::onBusinessCountyChange)
         OutlinedTextField(state.businessLocation, viewModel::onBusinessLocationChange, label = { Text("Business Location") }, singleLine = true, modifier = Modifier.fillMaxWidth())
         OutlinedTextField(state.road, viewModel::onRoadChange, label = { Text("Road") }, singleLine = true, modifier = Modifier.fillMaxWidth())
@@ -330,6 +414,86 @@ private fun BusinessInfoStep(state: AddCustomerUiState, viewModel: AddCustomerVi
             Icon(Icons.Filled.AddAPhoto, contentDescription = null)
             Text(" Add Business Photo")
         }
+
+        Text("Borrower Security", style = MaterialTheme.typography.titleSmall)
+        state.securityItems.forEachIndexed { index, item ->
+            SecurityItemSummaryCard(
+                entry = item,
+                onEdit = { viewModel.onStartEditSecurityItem(SecurityItemContext.BORROWER, index) },
+                onRemove = { viewModel.onRemoveSecurityItem(SecurityItemContext.BORROWER, index) }
+            )
+        }
+        OutlinedButton(
+            onClick = { viewModel.onStartAddSecurityItem(SecurityItemContext.BORROWER) },
+            modifier = Modifier.fillMaxWidth()
+        ) { Text("Add Security Item") }
+    }
+}
+
+@Composable
+private fun GuarantorsStep(state: AddCustomerUiState, viewModel: AddCustomerViewModel) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text("Guarantors", style = MaterialTheme.typography.titleMedium)
+        Text(
+            "Up to $MAX_GUARANTORS guarantors. Only the first guarantor's security items are recorded.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        state.guarantors.forEachIndexed { index, guarantor ->
+            PersonSummaryCard(
+                title = "${guarantor.firstname} ${guarantor.surname}".trim(),
+                subtitle = guarantor.relationship,
+                onEdit = { viewModel.onStartEditGuarantor(index) },
+                onRemove = { viewModel.onRemoveGuarantor(index) }
+            )
+        }
+        if (state.guarantors.size < MAX_GUARANTORS) {
+            OutlinedButton(onClick = viewModel::onStartAddGuarantor, modifier = Modifier.fillMaxWidth()) {
+                Text("Add Guarantor")
+            }
+        }
+    }
+}
+
+@Composable
+private fun NextOfKinStep(state: AddCustomerUiState, viewModel: AddCustomerViewModel) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text("Next of Kin", style = MaterialTheme.typography.titleMedium)
+        Text(
+            "Up to $MAX_NEXT_OF_KIN next of kin.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        state.nextOfKin.forEachIndexed { index, kin ->
+            PersonSummaryCard(
+                title = "${kin.firstname} ${kin.surname}".trim(),
+                subtitle = kin.relationship,
+                onEdit = { viewModel.onStartEditNextOfKin(index) },
+                onRemove = { viewModel.onRemoveNextOfKin(index) }
+            )
+        }
+        if (state.nextOfKin.size < MAX_NEXT_OF_KIN) {
+            OutlinedButton(onClick = viewModel::onStartAddNextOfKin, modifier = Modifier.fillMaxWidth()) {
+                Text("Add Next of Kin")
+            }
+        }
+    }
+}
+
+@Composable
+private fun PersonSummaryCard(title: String, subtitle: String, onEdit: () -> Unit, onRemove: () -> Unit) {
+    Card(modifier = Modifier.fillMaxWidth().clickable(onClick = onEdit)) {
+        Row(Modifier.padding(12.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(title.ifBlank { "Unnamed" }, fontWeight = FontWeight.Bold)
+                if (subtitle.isNotBlank()) {
+                    Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+            IconButton(onClick = onRemove) {
+                Icon(Icons.Filled.Close, contentDescription = "Remove", tint = MaterialTheme.colorScheme.error)
+            }
+        }
     }
 }
 
@@ -346,6 +510,15 @@ private fun ReviewSubmitStep(state: AddCustomerUiState) {
         }
         if (state.businessImageFiles.isNotEmpty()) {
             Text("${state.businessImageFiles.size} business photo(s) attached", color = MaterialTheme.colorScheme.primary)
+        }
+        if (state.securityItems.isNotEmpty()) {
+            Text("${state.securityItems.size} security item(s)", color = MaterialTheme.colorScheme.primary)
+        }
+        if (state.guarantors.isNotEmpty()) {
+            Text("${state.guarantors.size} guarantor(s)", color = MaterialTheme.colorScheme.primary)
+        }
+        if (state.nextOfKin.isNotEmpty()) {
+            Text("${state.nextOfKin.size} next of kin", color = MaterialTheme.colorScheme.primary)
         }
     }
 }

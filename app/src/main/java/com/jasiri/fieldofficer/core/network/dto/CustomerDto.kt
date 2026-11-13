@@ -139,7 +139,82 @@ data class CreateCustomerFields(
     @SerialName("id_front_url") val idFrontUrl: String? = null,
     @SerialName("id_back_url") val idBackUrl: String? = null,
     @SerialName("house_image_url") val houseImageUrl: String? = null,
+    @SerialName("requested_amount") val requestedAmount: Double? = null,
     @SerialName("form_status") val formStatus: String = "submitted"
+)
+
+/**
+ * Borrower Security — `security_items` table. `images` is read by the backend as a nested
+ * list and written to a separate security_item_images row per URL; it isn't itself a column,
+ * so unlike every other field here it's safe regardless of the raw-map-to-SQL-column binding.
+ */
+@Serializable
+data class SecurityItemFields(
+    val item: String,
+    val description: String? = null,
+    val identification: String? = null,
+    val value: Double? = null,
+    val images: List<String> = emptyList()
+)
+
+/**
+ * Guarantor Security — `guarantor_security` table. Deliberately a SEPARATE class from
+ * SecurityItemFields even though the UI treats them identically: that table has
+ * estimated_market_value, not value, and since the backend inserts a request object's keys
+ * as literal SQL columns, including a `value` key here would fail the insert outright.
+ */
+@Serializable
+data class GuarantorSecurityItemFields(
+    val item: String,
+    val description: String? = null,
+    val identification: String? = null,
+    @SerialName("estimated_market_value") val estimatedMarketValue: Double? = null,
+    val images: List<String> = emptyList()
+)
+
+/** Mirrors the `guarantors` table exactly — NOT a duplicate of all Personal Info fields. */
+@Serializable
+data class GuarantorFields(
+    val prefix: String? = null,
+    @SerialName("marital_status") val maritalStatus: String? = null,
+    val gender: String? = null,
+    val mobile: String,
+    @SerialName("postal_address") val postalAddress: String? = null,
+    val code: Int? = null,
+    val occupation: String? = null,
+    val relationship: String,
+    @SerialName("date_of_birth") val dateOfBirth: String? = null,
+    @SerialName("residence_status") val residenceStatus: String? = null,
+    @SerialName("id_number") val idNumber: String,
+    @SerialName("Firstname") val firstname: String,
+    @SerialName("Surname") val surname: String,
+    @SerialName("Middlename") val middlename: String? = null,
+    @SerialName("city_town") val cityTown: String? = null,
+    @SerialName("passport_url") val passportUrl: String? = null,
+    @SerialName("id_front_url") val idFrontUrl: String? = null,
+    @SerialName("id_back_url") val idBackUrl: String? = null,
+    val county: String? = null,
+    @SerialName("alternative_number") val alternativeNumber: String? = null
+)
+
+/** Mirrors the `next_of_kin` table. id_number is an integer column there, unlike the customer's. */
+@Serializable
+data class NextOfKinFields(
+    @SerialName("Firstname") val firstname: String,
+    @SerialName("Middlename") val middlename: String? = null,
+    @SerialName("Surname") val surname: String,
+    @SerialName("id_number") val idNumber: Int? = null,
+    val relationship: String,
+    @SerialName("relationship_other") val relationshipOther: String? = null,
+    val mobile: String,
+    @SerialName("alternative_number") val alternativeNumber: String? = null,
+    @SerialName("employment_status") val employmentStatus: String,
+    @SerialName("company_name") val companyName: String? = null,
+    val salary: Double? = null,
+    @SerialName("business_name") val businessName: String? = null,
+    @SerialName("business_income") val businessIncome: Double? = null,
+    val county: String,
+    @SerialName("city_town") val cityTown: String? = null
 )
 
 /** Mirrors the backend's top-level `spouse` map — a sibling of `customer`, not nested in it. */
@@ -156,9 +231,15 @@ data class CreateCustomerRequest(
     val customer: CreateCustomerFields,
     val customerId: Long? = null,
     val spouse: SpouseFields? = null,
-    // Top-level, sibling of `customer` — backend inserts one business_images row per URL
-    // using the customer id resolved in this same request (see CustomerServiceImpl).
-    val businessImages: List<String>? = null
+    // All of the below are top-level, siblings of `customer` — CustomerServiceImpl.createOrResumeFull
+    // reads each as its own key in the same request and inserts into its own table using the
+    // customer id resolved in this call. guarantorSecurityItems is only ever attached to the
+    // FIRST guarantor in the `guarantors` list (a backend quirk, not a mobile-side limitation).
+    val businessImages: List<String>? = null,
+    val securityItems: List<SecurityItemFields>? = null,
+    val guarantors: List<GuarantorFields>? = null,
+    val guarantorSecurityItems: List<GuarantorSecurityItemFields>? = null,
+    val nextOfKins: List<NextOfKinFields>? = null
 )
 
 @Serializable

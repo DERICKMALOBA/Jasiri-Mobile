@@ -6,7 +6,11 @@ import com.jasiri.fieldofficer.core.network.dto.CreateCustomerFields
 import com.jasiri.fieldofficer.core.network.dto.CreateCustomerRequest
 import com.jasiri.fieldofficer.core.network.dto.CustomerBundleDto
 import com.jasiri.fieldofficer.core.network.dto.CustomerDto
+import com.jasiri.fieldofficer.core.network.dto.GuarantorFields
+import com.jasiri.fieldofficer.core.network.dto.GuarantorSecurityItemFields
 import com.jasiri.fieldofficer.core.network.dto.LoanSummaryDto
+import com.jasiri.fieldofficer.core.network.dto.NextOfKinFields
+import com.jasiri.fieldofficer.core.network.dto.SecurityItemFields
 import com.jasiri.fieldofficer.core.network.dto.SpouseFields
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
@@ -93,10 +97,22 @@ class CustomerRepository @Inject constructor(
     suspend fun createCustomer(
         fields: CreateCustomerFields,
         spouse: SpouseFields? = null,
-        businessImages: List<String>? = null
+        businessImages: List<String>? = null,
+        securityItems: List<SecurityItemFields>? = null,
+        guarantors: List<GuarantorFields>? = null,
+        guarantorSecurityItems: List<GuarantorSecurityItemFields>? = null,
+        nextOfKins: List<NextOfKinFields>? = null
     ): Result<CustomerDto?> = runCatching {
         api.createCustomerFull(
-            CreateCustomerRequest(customer = fields, spouse = spouse, businessImages = businessImages)
+            CreateCustomerRequest(
+                customer = fields,
+                spouse = spouse,
+                businessImages = businessImages,
+                securityItems = securityItems,
+                guarantors = guarantors,
+                guarantorSecurityItems = guarantorSecurityItems,
+                nextOfKins = nextOfKins
+            )
         ).data?.customer
     }
 

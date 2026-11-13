@@ -30,11 +30,10 @@ fun FormDropdownField(
     label: String,
     selected: String,
     options: List<String>,
-    onSelected: (String) -> Unit,
-    modifier: Modifier = Modifier
+    onSelected: (String) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
-    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }, modifier = modifier) {
+    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
         OutlinedTextField(
             value = selected,
             onValueChange = {},
@@ -62,8 +61,7 @@ fun FormDropdownField(
 fun FormDateField(
     label: String,
     value: String,
-    onValueChange: (String) -> Unit,
-    modifier: Modifier = Modifier
+    onValueChange: (String) -> Unit
 ) {
     var showDialog by remember { mutableStateOf(false) }
     OutlinedTextField(
@@ -77,7 +75,7 @@ fun FormDateField(
                 Icon(Icons.Filled.CalendarMonth, contentDescription = "Pick date")
             }
         },
-        modifier = modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth()
     )
     if (showDialog) {
         val state = rememberDatePickerState()
