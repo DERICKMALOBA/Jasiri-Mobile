@@ -33,6 +33,7 @@ import com.jasiri.fieldofficer.feature.customer.detail.CustomerDetailScreen
 import com.jasiri.fieldofficer.feature.customer.list.CustomerListScreen
 import com.jasiri.fieldofficer.feature.dashboard.DashboardScreen
 import com.jasiri.fieldofficer.feature.leads.AddLeadScreen
+import com.jasiri.fieldofficer.feature.performance.PerformanceScreen
 import com.jasiri.fieldofficer.feature.routes.RoutesScreen
 import com.jasiri.fieldofficer.feature.routes.SelectVisitCustomersScreen
 import com.jasiri.fieldofficer.feature.routes.VisitOutcomeScreen
@@ -44,7 +45,7 @@ private val bottomNavItems = listOf(
     BottomNavItem(Destination.Customers, Icons.Filled.People, "Customers"),
     BottomNavItem(Destination.Routes, Icons.Filled.Place, "Routes"),
     BottomNavItem(Destination.Collections, Icons.Filled.AccountBalanceWallet, "Collect"),
-    BottomNavItem(Destination.Targets, Icons.Filled.TrackChanges, "Targets"),
+    BottomNavItem(Destination.Targets, Icons.Filled.TrackChanges, "Performance"),
 )
 
 private val bottomNavRoutes = bottomNavItems.map { it.destination.route }.toSet()
@@ -89,6 +90,13 @@ fun FieldOfficerNavGraph(navController: NavHostController = rememberNavControlle
                     },
                     onCollectPayment = {
                         navController.navigate(Destination.Collections.route) {
+                            popUpTo(navController.graph.startDestinationId) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    onMyPerformance = {
+                        navController.navigate(Destination.Targets.route) {
                             popUpTo(navController.graph.startDestinationId) { saveState = true }
                             launchSingleTop = true
                             restoreState = true
@@ -158,7 +166,7 @@ fun FieldOfficerNavGraph(navController: NavHostController = rememberNavControlle
             ) {
                 CollectPaymentScreen(onBack = { navController.popBackStack() })
             }
-            composable(Destination.Targets.route) { ComingSoonScreen("Targets") }
+            composable(Destination.Targets.route) { PerformanceScreen() }
         }
     }
 }

@@ -65,4 +65,8 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideCollectionsApi(retrofit: Retrofit): CollectionsApi = retrofit.create(CollectionsApi::class.java)
+
+    @Provides
+    @Singleton
+    fun providePerformanceApi(retrofit: Retrofit): PerformanceApi = retrofit.create(PerformanceApi::class.java)
 }

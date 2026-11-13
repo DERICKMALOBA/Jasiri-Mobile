@@ -56,7 +56,8 @@ fun DashboardScreen(
     onNewCustomer: () -> Unit = {},
     onNewLead: () -> Unit = {},
     onStartRoute: () -> Unit = {},
-    onCollectPayment: () -> Unit = {}
+    onCollectPayment: () -> Unit = {},
+    onMyPerformance: () -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -132,7 +133,7 @@ fun DashboardScreen(
             QuickAction("New Lead", Icons.Filled.PersonSearch, onNewLead),
             QuickAction("Start Route", Icons.Filled.Place, onStartRoute),
             QuickAction("Collect Payment", Icons.Filled.AccountBalanceWallet, onCollectPayment),
-            QuickAction("My Targets", Icons.Filled.TrackChanges) {}
+            QuickAction("My Performance", Icons.Filled.TrackChanges, onMyPerformance)
         )
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             quickActions.chunked(2).forEach { rowItems ->
