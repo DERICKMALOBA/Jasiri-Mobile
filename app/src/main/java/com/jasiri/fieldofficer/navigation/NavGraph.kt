@@ -7,6 +7,7 @@ import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.TrackChanges
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -29,6 +30,7 @@ import com.jasiri.fieldofficer.feature.customer.add.AddCustomerScreen
 import com.jasiri.fieldofficer.feature.customer.detail.CustomerDetailScreen
 import com.jasiri.fieldofficer.feature.customer.list.CustomerListScreen
 import com.jasiri.fieldofficer.feature.dashboard.DashboardScreen
+import com.jasiri.fieldofficer.feature.leads.AddLeadScreen
 
 private data class BottomNavItem(val destination: Destination, val icon: ImageVector, val label: String)
 
@@ -70,7 +72,10 @@ fun FieldOfficerNavGraph(navController: NavHostController = rememberNavControlle
                 )
             }
             composable(Destination.Home.route) {
-                DashboardScreen(onNewCustomer = { navController.navigate(Destination.AddCustomer.route) })
+                DashboardScreen(
+                    onNewCustomer = { navController.navigate(Destination.AddCustomer.route) },
+                    onNewLead = { navController.navigate(Destination.AddLead.route) }
+                )
             }
             composable(Destination.Customers.route) {
                 CustomerListScreen(
@@ -82,6 +87,12 @@ fun FieldOfficerNavGraph(navController: NavHostController = rememberNavControlle
             }
             composable(Destination.AddCustomer.route) {
                 AddCustomerScreen(
+                    onDone = { navController.popBackStack() },
+                    onCancel = { navController.popBackStack() }
+                )
+            }
+            composable(Destination.AddLead.route) {
+                AddLeadScreen(
                     onDone = { navController.popBackStack() },
                     onCancel = { navController.popBackStack() }
                 )
@@ -114,7 +125,14 @@ private fun FieldOfficerBottomBar(navController: NavHostController, currentRoute
                     }
                 },
                 icon = { Icon(item.icon, contentDescription = item.label) },
-                label = { Text(item.label) }
+                label = {
+                    Text(
+                        item.label,
+                        maxLines = 1,
+                        softWrap = false,
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                }
             )
         }
     }

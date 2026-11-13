@@ -2,6 +2,7 @@ package com.jasiri.fieldofficer.feature.dashboard
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jasiri.fieldofficer.core.leads.LeadRepository
 import com.jasiri.fieldofficer.core.network.dto.DashboardSummaryDto
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,7 +18,8 @@ data class DashboardUiState(
 
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
-    private val repository: DashboardRepository
+    private val repository: DashboardRepository,
+    private val leadRepository: LeadRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DashboardUiState())
@@ -26,7 +28,13 @@ class DashboardViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             val (summary, placeholder) = repository.getSummary()
-            _uiState.value = DashboardUiState(summary = summary, isPlaceholder = placeholder, isLoading = false)
+            leadRepository.leads.collect { leads ->
+                _uiState.value = DashboardUiState(
+                    summary = summary.copy(leadsCount = leads.size),
+                    isPlaceholder = placeholder,
+                    isLoading = false
+                )
+            }
         }
     }
 }
