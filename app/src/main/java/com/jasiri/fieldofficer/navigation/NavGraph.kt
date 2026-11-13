@@ -25,6 +25,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.jasiri.fieldofficer.feature.auth.LoginScreen
+import com.jasiri.fieldofficer.feature.collections.CollectPaymentScreen
 import com.jasiri.fieldofficer.feature.common.ComingSoonScreen
 import com.jasiri.fieldofficer.feature.customer.add.AddCustomerScreen
 import com.jasiri.fieldofficer.feature.customer.detail.CustomerDetailScreen
@@ -84,6 +85,13 @@ fun FieldOfficerNavGraph(navController: NavHostController = rememberNavControlle
                             launchSingleTop = true
                             restoreState = true
                         }
+                    },
+                    onCollectPayment = {
+                        navController.navigate(Destination.Collections.route) {
+                            popUpTo(navController.graph.startDestinationId) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
                     }
                 )
             }
@@ -132,7 +140,7 @@ fun FieldOfficerNavGraph(navController: NavHostController = rememberNavControlle
                     onCancel = { navController.popBackStack() }
                 )
             }
-            composable(Destination.Collections.route) { ComingSoonScreen("Collections") }
+            composable(Destination.Collections.route) { CollectPaymentScreen() }
             composable(Destination.Targets.route) { ComingSoonScreen("Targets") }
         }
     }

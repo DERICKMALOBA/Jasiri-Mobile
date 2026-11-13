@@ -55,7 +55,8 @@ fun DashboardScreen(
     viewModel: DashboardViewModel = hiltViewModel(),
     onNewCustomer: () -> Unit = {},
     onNewLead: () -> Unit = {},
-    onStartRoute: () -> Unit = {}
+    onStartRoute: () -> Unit = {},
+    onCollectPayment: () -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -130,7 +131,7 @@ fun DashboardScreen(
             QuickAction("New Customer", Icons.Filled.PersonAdd, onNewCustomer),
             QuickAction("New Lead", Icons.Filled.PersonSearch, onNewLead),
             QuickAction("Start Route", Icons.Filled.Place, onStartRoute),
-            QuickAction("Collect Payment", Icons.Filled.AccountBalanceWallet) {},
+            QuickAction("Collect Payment", Icons.Filled.AccountBalanceWallet, onCollectPayment),
             QuickAction("My Targets", Icons.Filled.TrackChanges) {}
         )
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
